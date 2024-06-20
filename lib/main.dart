@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:statemanazment/state.dart/state.dart';
 import 'package:statemanazment/view/view.dart';
 
+final store = Store<AppState>(initialState: AppState.initialState());
+
 void main() {
-  final store = Store<AppState>( initialState: AppState.initialState());
   runApp(MyApp(store: store));
 }
 
@@ -25,8 +26,7 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.blue,
           ),
           debugShowCheckedModeBanner: false,
-          home: const DesktopView()
-          ),
+          home: const DesktopView()),
     );
   }
 }

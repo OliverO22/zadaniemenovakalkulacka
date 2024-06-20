@@ -1,6 +1,8 @@
 import 'package:async_redux/async_redux.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:statemanazment/main.dart';
 import 'package:statemanazment/state.dart/actions.dart';
 import 'package:statemanazment/state.dart/state.dart';
 
@@ -39,27 +41,54 @@ class ResponsiveContainerState extends State<ResponsiveContainer> {
   late ExchangeBlock firstValue;
   late ExchangeBlock secondValue;
 
+  FormGroup firstFormGroup = FormGroup({
+    'amount': FormControl<double>(),
+    'currency': FormControl<String>(validators: [Validators.required], value: 'USD'),
+  });
+
+  FormGroup secondFormGroup = FormGroup({
+    'amount': FormControl<double>(),
+    'currency': FormControl<String>(validators: [Validators.required], value: 'EUR'),
+  });
+
   @override
   void initState() {
     super.initState();
     firstValue = ExchangeBlock(
       currentSwitch: true,
-      formulare: FormGroup({
-        'firExchangeValue': FormControl<double>(),
-        'secExchangeValue': FormControl<double>(),
-        'dropdownFrom': FormControl<String>(validators: [Validators.required]),
-        "dropdownTo": FormControl<String>(validators: [Validators.required]),
-      }),
+      formulare: firstFormGroup,
     );
     secondValue = ExchangeBlock(
       currentSwitch: false,
-      formulare: FormGroup({
-        'firExchangeValue': FormControl<double>(),
-        'secExchangeValue': FormControl<double>(),
-        'dropdownFrom': FormControl<String>(validators: [Validators.required]),
-        'dropdownTo': FormControl<String>(validators: [Validators.required]),
-      }),
+      formulare: secondFormGroup,
     );
+
+    firstFormGroup.control('amount').valueChanges.listen((value) => firstListener(value, true));
+
+    secondFormGroup.control('amount').valueChanges.listen((value) => firstListener(value, false));
+  }
+
+  firstListener(value, isFirst) async {
+    if (isFirst) {
+      if (value == store.state.secAmount) return;
+    } else {
+      if (value == store.state.amount) return;
+    }
+
+    if (value != null) {
+      await StoreProvider.dispatch<AppState>(
+        context,
+        SetAmountAction(value, isFirst),
+      );
+    }
+
+    print(store.state.amount);
+
+    if (isFirst) {
+      secondFormGroup.control('amount').patchValue(store.state.secAmount);
+    } else {
+      firstFormGroup.control('amount').patchValue(store.state.amount);
+    }
   }
 
   @override
@@ -68,109 +97,89 @@ class ResponsiveContainerState extends State<ResponsiveContainer> {
     return StoreConnector<AppState, AppState>(
         converter: (store) => store.state,
         builder: (context, state) {
-          firstValue = ExchangeBlock(
+          /*firstValue = ExchangeBlock(
+            key: ValueKey('first'),
             currentSwitch: true,
             formulare: FormGroup({
               'firExchangeValue': FormControl<double>(value: state.amount),
               'secExchangeValue': FormControl<double>(value: state.secAmount),
-              'dropdownFrom': FormControl<String>(
-                  validators: [Validators.required], value: state.fromCurrency),
-              'dropdownTo': FormControl<String>(
-                  validators: [Validators.required], value: state.toCurrency),
+              'dropdownFrom': FormControl<String>(validators: [Validators.required], value: state.fromCurrency),
+              'dropdownTo': FormControl<String>(validators: [Validators.required], value: state.toCurrency),
             }),
           );
 
           secondValue = ExchangeBlock(
+            key: ValueKey('second'),
             currentSwitch: false,
             formulare: FormGroup({
               'firExchangeValue': FormControl<double>(value: state.amount),
               'secExchangeValue': FormControl<double>(value: state.secAmount),
-              'dropdownFrom': FormControl<String>(
-                  validators: [Validators.required], value: state.fromCurrency),
-              'dropdownTo': FormControl<String>(
-                  validators: [Validators.required], value: state.toCurrency),
+              'dropdownFrom': FormControl<String>(validators: [Validators.required], value: state.fromCurrency),
+              'dropdownTo': FormControl<String>(validators: [Validators.required], value: state.toCurrency),
             }),
-          );
+          );*/
 
-          return Container(
-              width: MediaQuery.of(context).size.width < 700
-                  ? MediaQuery.of(context).size.width * 0.90
-                  : MediaQuery.of(context).size.width * 0.80,
-              height: MediaQuery.of(context).size.width < 700
-                  ? MediaQuery.of(context).size.height * 0.90
-                  : MediaQuery.of(context).size.height * 0.35,
-              padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.01),
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                border: Border.all(
-                  color: const Color.fromARGB(184, 0, 0, 0),
-                  width: 1.0,
-                  style: BorderStyle.solid,
-                ),
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color.fromRGBO(255, 255, 255, 0.725),
-                    blurRadius: 3.0,
-                    spreadRadius: 1.0,
-                  ),
+          final mediaQuery = MediaQuery.of(context);
+          double breakpoint = 700;
+
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                    width: mediaQuery.size.width < breakpoint
+                        ? mediaQuery.size.width * 0.90
+                        : mediaQuery.size.width * 0.80,
+                    height: mediaQuery.size.width < breakpoint
+                        ? mediaQuery.size.height * 0.90
+                        : mediaQuery.size.height * 0.35,
+                    padding: EdgeInsets.all(mediaQuery.size.width * 0.01),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      border: Border.all(
+                        color: const Color.fromARGB(184, 0, 0, 0),
+                        width: 1.0,
+                        style: BorderStyle.solid,
+                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color.fromRGBO(255, 255, 255, 0.725),
+                          blurRadius: 3.0,
+                          spreadRadius: 1.0,
+                        ),
+                      ],
+                    ),
+                    child: Flex(
+                      direction: mediaQuery.size.width < breakpoint ? Axis.vertical : Axis.horizontal,
+                      children: [
+                        Expanded(flex: 1, child: switchs ? firstValue : secondValue),
+                        SizedBox(width: mediaQuery.size.width * 0.01),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              switchs = !switchs;
+                            });
+                          },
+                          icon: Icon(
+                            switchs ? Icons.arrow_circle_right : Icons.arrow_circle_left,
+                            color: Colors.black,
+                            size: mediaQuery.size.width * 0.05,
+                            semanticLabel: 'Switch Blocks',
+                          ),
+                        ),
+                        SizedBox(width: mediaQuery.size.width * 0.01),
+                        Expanded(flex: 1, child: switchs ? secondValue : firstValue),
+                      ],
+                    )),
+                if (kDebugMode) ...[
+                  Text(firstFormGroup.rawValue.toString()),
+                  Text(secondFormGroup.rawValue.toString()),
+                  Text(store.state.toString()),
                 ],
-              ),
-              child: MediaQuery.of(context).size.width < 700
-                  ? Column(
-                      children: [
-                        switchs
-                            ? Expanded(flex: 1, child: firstValue)
-                            : Expanded(flex: 1, child: secondValue),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.01),
-                        IconButton(
-                          onPressed: () {
-                            switchs = !switchs;
-                          },
-                          icon: Icon(
-                            switchs
-                                ? Icons.arrow_circle_right
-                                : Icons.arrow_circle_left,
-                            color: Colors.black,
-                            size: MediaQuery.of(context).size.width * 0.05,
-                            semanticLabel: 'Switch Blocks',
-                          ),
-                        ),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.01),
-                        switchs
-                            ? Expanded(flex: 1, child: secondValue)
-                            : Expanded(flex: 1, child: firstValue),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        switchs
-                            ? Expanded(flex: 1, child: firstValue)
-                            : Expanded(flex: 1, child: secondValue),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.01),
-                        IconButton(
-                          onPressed: () {
-                            switchs = !switchs;
-                          },
-                          icon: Icon(
-                            switchs
-                                ? Icons.arrow_circle_right
-                                : Icons.arrow_circle_left,
-                            color: Colors.black,
-                            size: MediaQuery.of(context).size.width * 0.05,
-                            semanticLabel: 'Switch Blocks',
-                          ),
-                        ),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.01),
-                        switchs
-                            ? Expanded(flex: 1, child: secondValue)
-                            : Expanded(flex: 1, child: firstValue),
-                      ],
-                    ));
+              ],
+            ),
+          );
         });
   }
 }
@@ -233,19 +242,8 @@ class ExchangeBlockState extends State<ExchangeBlock> {
         converter: (store) => store.state,
         builder: (context, state) {
           return ReactiveTextField<double>(
-            formControlName:
-                widget.currentSwitch ? "firExchangeValue" : "secExchangeValue",
+            formControlName: "amount",
             keyboardType: TextInputType.number,
-            onChanged: (control) {
-              double? value = control.value;
-
-              if (value != null) {
-                StoreProvider.dispatch<AppState>(
-                  context,
-                  SetAmountAction(value, widget.currentSwitch),
-                );
-              }
-            },
             decoration: const InputDecoration(
               labelText: 'Enter Number',
               border: OutlineInputBorder(),
@@ -265,8 +263,7 @@ class ExchangeBlockState extends State<ExchangeBlock> {
                   ))
               .toList();
           return ReactiveDropdownField<String>(
-            formControlName:
-                widget.currentSwitch ? "dropdownFrom" : "dropdownTo",
+            formControlName: 'currency',
             hint: const Text('Select payment...'),
             items: dropdownItems,
             onChanged: (control) {
@@ -297,15 +294,10 @@ class ExchangeBlockState extends State<ExchangeBlock> {
     return StoreConnector<AppState, AppState>(
       converter: (store) => store.state,
       builder: (context, state) {
-        return widget.currentSwitch
-            ? Text(
-                '"Hodnota ktorá by mala byť v druhom okne: ${widget.formulare.control('secExchangeValue').value} ',
-                style: const TextStyle(fontSize: 20),
-              )
-            : Text(
-                '"Hodnota ktoá by mala byť v prvom okne: ${widget.formulare.control('firExchangeValue').value} ',
-                style: const TextStyle(fontSize: 20),
-              );
+        return Text(
+          'form: ${widget.formulare.control('amount').value} ',
+          style: const TextStyle(fontSize: 20),
+        );
       },
     );
   }
@@ -314,15 +306,10 @@ class ExchangeBlockState extends State<ExchangeBlock> {
     return StoreConnector<AppState, AppState>(
       converter: (store) => store.state,
       builder: (context, state) {
-        return widget.currentSwitch
-            ? Text(
-                '"Hodnota ktorá by mala byť v prvom okne: ${widget.formulare.control('firExchangeValue').value} ',
-                style: const TextStyle(fontSize: 20),
-              )
-            : Text(
-                '"Hodnota ktorá by mala byť v druhom okne: ${widget.formulare.control('secExchangeValue').value} ',
-                style: const TextStyle(fontSize: 20),
-              );
+        return Text(
+          'state: ${state.amount} / ${state.secAmount} ',
+          style: const TextStyle(fontSize: 20),
+        );
       },
     );
   }
