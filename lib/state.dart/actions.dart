@@ -1,21 +1,20 @@
+import 'dart:convert';
+
 import 'package:async_redux/async_redux.dart';
 import 'package:http/http.dart' as http;
 import 'package:statemanazment/model/exchange_rate.dart';
 import 'package:statemanazment/model/serializers.dart';
-import 'dart:convert';
-import 'state.dart';
 
+import 'state.dart';
 
 class FetchExchangeRatesAction extends ReduxAction<AppState> {
   @override
   Future<AppState> reduce() async {
-    final response = await http
-        .get(Uri.parse('https://api.financie.online/v2/app/vymennekurzy/'));
+    final response = await http.get(Uri.parse('https://api.financie.online/v2/app/vymennekurzy/'));
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
-      final exchangeRates =
-          serializers.deserializeWith(ExchangeRates.serializer, jsonResponse);
+      final exchangeRates = serializers.deserializeWith(ExchangeRates.serializer, jsonResponse);
       return state.copy(exchangeRates: exchangeRates!);
     } else {
       throw Exception('Failed to load exchange rates');

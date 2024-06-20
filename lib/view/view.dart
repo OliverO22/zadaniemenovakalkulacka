@@ -4,7 +4,6 @@ import 'package:statemanazment/state.dart/actions.dart';
 import 'package:statemanazment/state.dart/state.dart';
 import 'package:statemanazment/view/custom_widget.dart';
 
-
 class DesktopView extends StatefulWidget {
   const DesktopView({super.key});
 

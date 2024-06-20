@@ -1,7 +1,6 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:statemanazment/model/exchange_rate.dart';
 
-
 class AppState {
   final ExchangeRates exchangeRates;
   final double amount;
@@ -38,4 +37,9 @@ class AppState {
         ..date = ''
         ..rate = MapBuilder<String, double>()
         ..rates = ListBuilder<ExchangeRate>()));
+
+  @override
+  String toString() {
+    return 'AppState{\namount: $amount,\nsecAmount: $secAmount,\nfromCurrency: $fromCurrency,\ntoCurrency: $toCurrency,\nexchangeRates: $exchangeRates}';
+  }
 }
